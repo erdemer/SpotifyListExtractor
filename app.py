@@ -281,6 +281,30 @@ with tab1:
         )
         
         my_playlists = get_user_playlists()
+        
+        # Debug information
+        spotify_owned = [pl for pl in my_playlists if pl and pl['owner']['id'] == 'spotify']
+        user_owned = [pl for pl in my_playlists if pl and pl['owner']['id'] != 'spotify']
+        
+        # Debug section
+        with st.expander("🔍 Debug: Playlist Fetch Statistics", expanded=False):
+            st.write(f"**Total playlists fetched:** {len(my_playlists)}")
+            st.write(f"**Spotify-owned playlists:** {len(spotify_owned)} (includes 'Made For You', Mixes, etc.)")
+            st.write(f"**User/Other playlists:** {len(user_owned)}")
+            
+            st.markdown("---")
+            st.markdown("**Spotify-Owned Playlists:**")
+            for pl in spotify_owned:
+                st.write(f"- {pl['name']} (ID: `{pl['id'][:20]}...`)")
+            
+            st.markdown("---")
+            st.markdown("**Your Playlists:**")
+            for pl in user_owned[:10]:  # Show first 10
+                st.write(f"- {pl['name']} by {pl['owner']['display_name']} (ID: `{pl['id'][:20]}...`)")
+            if len(user_owned) > 10:
+                st.write(f"... and {len(user_owned) - 10} more")
+        
+        # Build playlist options
         playlist_options = {}
         for pl in my_playlists:
             if pl:
