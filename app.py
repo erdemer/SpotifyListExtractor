@@ -289,7 +289,7 @@ with st.sidebar:
     with st.expander("🔓 Token Hack (Advanced)"):
         st.info("Paste a token from Exportify to bypass limitations.")
         external_token = st.text_input("Access Token", type="password", help="Login to Exportify, copy the token from the URL, paste here.")
-        if st.button("Inject Token", use_container_width=True):
+        if st.button("Inject Token", use_container_width=True, type="primary"):
             if external_token:
                 # Fake a token info object
                 import time
