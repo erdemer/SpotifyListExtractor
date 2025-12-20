@@ -48,10 +48,17 @@ def get_playlist_id_from_link(url):
 
 
 def get_user_playlists():
-    # current_user_playlists hem senin oluşturduklarını hem takip ettiklerini getirir.
-    # limit=50 (API maksimumu). Daha fazlası için döngü gerekir.
+    playlists = []
+    # İlk sayfayı çek
     results = sp.current_user_playlists(limit=50)
-    return results['items']
+    playlists.extend(results['items'])
+
+    # Eğer devamı varsa (next varsa) döngüyle hepsini al
+    while results['next']:
+        results = sp.next(results)
+        playlists.extend(results['items'])
+
+    return playlists
 
 
 # --- ARAYÜZ (TABS) ---
