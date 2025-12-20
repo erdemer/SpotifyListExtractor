@@ -150,7 +150,7 @@ if selected_playlist_id:
                 # --- SAĞ KOLON: AKSİYONLAR (PAYLAŞ & İNDİR) ---
                 # --- SAĞ KOLON: AKSİYONLAR (LINK & PAYLAŞ) ---
                 with col_actions:
-                    st.subheader("🔗 Direkt Link")
+                    st.subheader("🔗 Direkt Linko")
 
                     # 1. Spotify Linkini Al
                     spotify_url = results['external_urls']['spotify']
