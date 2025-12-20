@@ -225,7 +225,6 @@ def get_playlist_id_from_link(url):
             return None
     return None
 
-@st.cache_data(ttl=300)
 def get_user_playlists():
     """Fetch all playlists from the user's library.
     
@@ -233,15 +232,33 @@ def get_user_playlists():
     will only appear if the user has followed/liked them in Spotify.
     """
     all_playlists = []
+    fetch_log = []  # Debug log
     
     try:
+        # First request
         results = sp.current_user_playlists(limit=50)
+        total_from_api = results.get('total', 0)
         all_playlists.extend(results['items'])
+        fetch_log.append(f"First fetch: Got {len(results['items'])} items, API says total={total_from_api}")
+        
+        # Pagination
+        page_num = 1
         while results['next']:
             results = sp.next(results)
+            page_num += 1
             all_playlists.extend(results['items'])
+            fetch_log.append(f"Page {page_num}: Got {len(results['items'])} more items")
+        
+        fetch_log.append(f"Final count: {len(all_playlists)} playlists fetched (API said {total_from_api})")
+        
+        # Store log in session state for display
+        st.session_state['fetch_log'] = fetch_log
+        st.session_state['api_total'] = total_from_api
+        
     except Exception as e:
         st.error(f"Error fetching library: {e}")
+        import traceback
+        st.session_state['fetch_log'] = [f"ERROR: {str(e)}", traceback.format_exc()]
             
     return all_playlists
 
@@ -253,7 +270,15 @@ with st.sidebar:
     st.markdown("Made by **Erdem Er**")
     
     st.markdown("---")
-    if st.button("🚪 Logout / Reset", use_container_width=True):
+    if st.button("� Refresh Playlists", use_container_width=True):
+        # Clear any cached data
+        if 'fetch_log' in st.session_state:
+            del st.session_state['fetch_log']
+        if 'api_total' in st.session_state:
+            del st.session_state['api_total']
+        st.rerun()
+    
+    if st.button("�🚪 Logout / Reset", use_container_width=True):
         if 'token_info' in st.session_state:
             del st.session_state['token_info']
         if 'selected_search_id' in st.session_state:
@@ -289,13 +314,32 @@ with tab1:
         # Debug section
         with st.expander("🔍 Debug: Playlist Fetch Statistics", expanded=False):
             st.write(f"**Total playlists fetched:** {len(my_playlists)}")
+            
+            # Show API total vs actual
+            if 'api_total' in st.session_state:
+                api_total = st.session_state['api_total']
+                if api_total != len(my_playlists):
+                    st.warning(f"⚠️ **Mismatch!** API says total={api_total}, but we fetched {len(my_playlists)}")
+                else:
+                    st.success(f"✅ Fetched all {len(my_playlists)} playlists successfully")
+            
             st.write(f"**Spotify-owned playlists:** {len(spotify_owned)} (includes 'Made For You', Mixes, etc.)")
             st.write(f"**User/Other playlists:** {len(user_owned)}")
             
+            # Show fetch log
+            if 'fetch_log' in st.session_state:
+                st.markdown("---")
+                st.markdown("**Fetch Log:**")
+                for log_entry in st.session_state['fetch_log']:
+                    st.code(log_entry, language="")
+            
             st.markdown("---")
             st.markdown("**Spotify-Owned Playlists:**")
-            for pl in spotify_owned:
-                st.write(f"- {pl['name']} (ID: `{pl['id'][:20]}...`)")
+            if len(spotify_owned) == 0:
+                st.warning("⚠️ No Spotify-owned playlists found! This might mean:\n- You haven't followed any 'Made For You' playlists\n- There's an authentication/scope issue\n- The API is not returning them")
+            else:
+                for pl in spotify_owned:
+                    st.write(f"- {pl['name']} (ID: `{pl['id'][:20]}...`)")
             
             st.markdown("---")
             st.markdown("**Your Playlists:**")
