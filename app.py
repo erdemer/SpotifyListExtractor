@@ -15,19 +15,56 @@ st.set_page_config(
 # --- CUSTOM CSS (THEME & ANIMATIONS) ---
 st.markdown("""
 <style>
-    /* MAIN BACKGROUND */
+    /* MAIN BACKGROUND WITH GRADIENT */
     .stApp {
-        background-color: #121212;
+        background: linear-gradient(to bottom right, #121212, #000000);
         color: #FFFFFF;
     }
     
     /* TEXT COLORS & FONTS */
     h1, h2, h3, h4, h5, h6, p, label, .stMarkdown, .stText, [data-testid="stMarkdownContainer"] {
         color: #FFFFFF !important;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-family: 'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
     .stCaption {
         color: #B3B3B3 !important;
+    }
+
+    /* CARDS FOR SEARCH RESULTS */
+    .playlist-card {
+        background-color: #181818;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.2s, background-color 0.2s;
+        cursor: pointer;
+        height: 100%;
+        border: 1px solid #282828;
+    }
+    .playlist-card:hover {
+        background-color: #282828;
+        transform: translateY(-5px);
+        border-color: #1DB954;
+    }
+    .playlist-card img {
+        border-radius: 4px;
+        margin-bottom: 10px;
+        width: 100%;
+        object-fit: cover;
+        aspect-ratio: 1/1;
+    }
+    .playlist-title {
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        white-space: nowrap; 
+        overflow: hidden;
+        text-overflow: ellipsis; 
+        display: block;
+    }
+    .playlist-owner {
+        font-size: 0.8rem;
+        color: #B3B3B3;
     }
 
     /* INPUT FIELDS */
@@ -35,12 +72,12 @@ st.markdown("""
         background-color: #282828 !important;
         color: white !important;
         border: 1px solid #282828 !important;
-        border-radius: 20px !important;
-        padding: 10px 15px !important;
+        border-radius: 50px !important; /* Pill shape */
+        padding: 12px 20px !important;
     }
     .stTextInput input:focus {
         border-color: #1DB954 !important;
-        box-shadow: none !important;
+        box-shadow: 0 0 0 1px #1DB954 !important;
     }
     .stTextInput label {
         color: #B3B3B3 !important;
@@ -54,29 +91,33 @@ st.markdown("""
         border-radius: 5px !important;
     }
     
-    /* STANDARD BUTTONS */
+    /* BUTTONS */
     .stButton > button {
         background-color: #1DB954 !important;
         color: white !important;
         border: none !important;
         border-radius: 50px !important;
         font-weight: bold !important;
-        padding: 0.5rem 2rem !important;
-        transition: all 0.3s ease !important;
+        font-size: 0.9rem !important;
+        padding: 0.6rem 2rem !important;
+        transition: all 0.2s ease !important;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
     .stButton > button:hover {
         background-color: #1ED760 !important;
-        transform: scale(1.05);
-        color: white !important;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
     }
-    
-    /* DOWNLOAD BUTTON SPECIAL STYLE */
+    .stButton > button:active {
+        transform: scale(0.98);
+    }
+
+    /* DOWNLOAD BUTTON */
     [data-testid="stDownloadButton"] > button {
-        background-color: #282828 !important;
+        background-color: transparent !important;
         color: #FFFFFF !important;
-        border: 1px solid #B3B3B3 !important;
+        border: 1px solid #FFFFFF !important;
         border-radius: 50px !important;
         width: 100%;
         transition: all 0.3s ease !important;
@@ -84,86 +125,20 @@ st.markdown("""
     [data-testid="stDownloadButton"] > button:hover {
         border-color: #1DB954 !important;
         color: #1DB954 !important;
-        background-color: #121212 !important;
+        background-color: rgba(29, 185, 84, 0.1) !important;
     }
 
-    /* LINKS (WhatsApp etc) */
-    a {
-        color: #1DB954 !important;
-        text-decoration: none;
-    }
-
-    /* PRIMARY CUSTOM LINKS (Like WhatsApp Button) */
-    a[kind="primary"] {
-        background-color: #282828 !important;
-        border: 1px solid #1DB954 !important;
-        color: #1DB954 !important;
-        border-radius: 50px !important;
-        transition: all 0.3s ease !important;
-        text-decoration: none !important;
-        padding: 10px 20px !important;
-        display: inline-block !important;
-    }
-    a[kind="primary"]:hover {
-        background-color: #1DB954 !important;
-        color: black !important;
-        transform: translateY(-2px);
-    }
-
-    /* TABS */
+    /* TAB STYLING */
     .stTabs [data-baseweb="tab-list"] {
         gap: 20px;
+        background-color: transparent;
     }
     .stTabs [data-baseweb="tab"] {
-        background-color: transparent;
-        border: none;
         color: #B3B3B3;
         font-weight: bold;
-        padding-bottom: 10px;
     }
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
         color: #1DB954;
-        border-bottom: 3px solid #1DB954;
-    }
-
-    /* DIVIDER */
-    hr {
-        border-color: #282828;
-    }
-
-    /* CARDS / CONTAINERS */
-    .css-1r6slb0, .stExpander {
-        background-color: #181818;
-        border-radius: 8px;
-        border: none;
-    }
-    
-    /* CUSTOM TRACK ROW STYLE */
-    .track-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        background-color: #181818;
-        border-radius: 4px;
-        margin-bottom: 5px;
-        transition: background-color 0.2s;
-    }
-    .track-row:hover {
-        background-color: #282828;
-    }
-    .track-info {
-        display: flex;
-        flex-direction: column;
-    }
-    .track-name {
-        font-weight: bold;
-        color: white;
-        font-size: 1rem;
-    }
-    .track-artist {
-        font-size: 0.85rem;
-        color: #B3B3B3;
     }
 
 </style>
@@ -179,13 +154,6 @@ except Exception:
     st.error("Secrets bulunamadı. Lütfen .streamlit/secrets.toml dosyasını kontrol et.")
     st.stop()
 
-# --- HEADER ---
-col_logo, col_title = st.columns([1, 6])
-with col_logo:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg", width=60)
-with col_title:
-    st.title("Spotify Playlist Manager")
-    st.caption("Playlists, made fancy.")
 
 # --- LOGIN & AUTH ---
 sp_oauth = SpotifyOAuth(
@@ -205,18 +173,19 @@ if 'token_info' not in st.session_state:
             st.query_params.clear()
             st.rerun()
         except Exception as e:
-            st.error(f"Giriş hatası: {e}")
+            st.error(f"SignIn Error: {e}")
             st.stop()
     else:
         auth_url = sp_oauth.get_authorize_url()
+        # Fancy Login Page
         st.markdown(
             f"""
-            <div style="text-align: center; margin-top: 50px; padding: 40px; background: #181818; border-radius: 10px;">
-                <h3>Hoş Geldin! 👋</h3>
-                <p style="color:#B3B3B3;">Playlistlerini yönetmek, indirmek ve paylaşmak için giriş yapmalısın.</p>
-                <br>
-                <a href="{auth_url}" target="_self" style="background-color: #1DB954; color: white; padding: 12px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1.1em; transition: 0.3s;">
-                    Spotify ile Giriş Yap
+            <div style="height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" width="100" style="margin-bottom: 20px;">
+                <h1 style="font-size: 3rem; margin-bottom: 10px;">Spotify Manager</h1>
+                <p style="color:#B3B3B3; font-size: 1.2rem; margin-bottom: 40px;">Manage, Export, and Share your playlists with style.</p>
+                <a href="{auth_url}" target="_self" style="background-color: #1DB954; color: white; padding: 15px 40px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1.2rem; transition: 0.3s; box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);">
+                    Login with Spotify
                 </a>
             </div>
             """,
@@ -249,13 +218,21 @@ def get_user_playlists():
     return all_playlists
 
 
+# --- APP HEADER (Small) ---
+with st.sidebar:
+    st.image("https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png", width=150)
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("Made by **Antigravity**")
+
+
 # --- MAIN INTERFACE ---
-tab1, tab2, tab3 = st.tabs(["📂 Library", "� Search", "�🔗 Paste Link"])
+tab1, tab2, tab3 = st.tabs(["📂 Library", "🔍 Search", "🔗 Paste Link"])
 selected_playlist_id = None
 
 # TAB 1: LIBRARY
 with tab1:
     try:
+        st.markdown("<br>", unsafe_allow_html=True)
         my_playlists = get_user_playlists()
         playlist_options = {}
         for pl in my_playlists:
@@ -265,8 +242,8 @@ with tab1:
 
         sorted_keys = sorted(playlist_options.keys(), key=str.lower)
         
-        st.markdown("##### 🎧 Select from Library")
-        contact_selected = st.selectbox("Search your library...", options=sorted_keys, label_visibility="collapsed")
+        st.markdown("### Your Library")
+        contact_selected = st.selectbox("Select a playlist", options=sorted_keys, label_visibility="collapsed")
         
         if contact_selected:
             selected_playlist_id = playlist_options[contact_selected]
@@ -274,66 +251,72 @@ with tab1:
     except Exception as e:
         st.error(f"Error loading library: {e}")
 
-# TAB 2: SEARCH
+# TAB 2: SEARCH (Visual Grid)
 with tab2:
-    st.markdown("##### 🔍 Search Spotify")
-    col_search, col_btn = st.columns([4, 1])
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### Search Spotify")
+    
+    col_search, col_btn = st.columns([5, 1])
     with col_search:
-        search_query = st.text_input("Search for playlists (e.g. 'Discover Weekly')", placeholder="Type playlist name...")
+        search_query = st.text_input("Search", placeholder="Playlists, Moods, Genres...", label_visibility="collapsed")
     with col_btn:
-        st.write("") # Spacer
-        st.write("") 
-        search_clicked = st.button("Search")
+        search_clicked = st.button("GO", use_container_width=True)
 
-    # Quick Access Buttons for "Made For You"
-    st.markdown("**Quick Find:**")
+    # Quick Access Buttons
+    st.markdown("<p style='font-size:0.9rem; color:#B3B3B3; margin-top:20px;'>Quick Access (Official):</p>", unsafe_allow_html=True)
     col_q1, col_q2, col_q3, col_q4 = st.columns(4)
-    with col_q1:
-        if st.button("Discover Weekly"):
-            search_query = "Discover Weekly"
-            search_clicked = True
-    with col_q2:
-        if st.button("Release Radar"):
-            search_query = "Release Radar"
-            search_clicked = True
-    with col_q3:
-        if st.button("On Repeat"):
-            search_query = "On Repeat"
-            search_clicked = True
-    with col_q4:
-        if st.button("Time Capsule"):
-            search_query = "Time Capsule"
-            search_clicked = True
+    
+    auto_search_term = None
+    if col_q1.button("Discover Weekly"): auto_search_term = "Discover Weekly owner:spotify"
+    if col_q2.button("Release Radar"): auto_search_term = "Release Radar owner:spotify"
+    if col_q3.button("On Repeat"): auto_search_term = "On Repeat owner:spotify"
+    if col_q4.button("Time Capsule"): auto_search_term = "Time Capsule owner:spotify"
 
-    if search_clicked and search_query:
+    final_query = auto_search_term if auto_search_term else (search_query if search_clicked else None)
+
+    if final_query:
         try:
-            # Search limit 20
-            results_search = sp.search(q=search_query, type='playlist', limit=20)
+            results_search = sp.search(q=final_query, type='playlist', limit=8)
             playlists_found = results_search['playlists']['items']
             
             if playlists_found:
-                st.success(f"Found {len(playlists_found)} playlists for '{search_query}'")
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.success(f"Found {len(playlists_found)} results for '{final_query.replace('owner:spotify', '').strip()}'")
                 
-                # Create a selection list
-                search_options = {}
-                for pl in playlists_found:
+                # GRID DISPLAY
+                cols = st.columns(4)
+                for i, pl in enumerate(playlists_found):
                     if pl:
-                        name = f"{pl['name']} • {pl['owner']['display_name']}"
-                        search_options[name] = pl['id']
-                
-                selected_search = st.selectbox("Select a result:", options=list(search_options.keys()))
-                if selected_search:
-                    selected_playlist_id = search_options[selected_search]
+                        with cols[i % 4]:
+                            # Card HTML
+                            img_url = pl['images'][0]['url'] if pl['images'] else "https://via.placeholder.com/300"
+                            if st.button(f"Select:\n{pl['name'][:20]}...", key=pl['id']): # Hack to make card clickable-ish
+                                st.session_state['selected_search_id'] = pl['id']
+                                st.rerun()
+                                
+                            st.markdown(f"""
+                            <div style="margin-top:-10px; margin-bottom:20px;">
+                                <img src="{img_url}" style="width:100%; border-radius:8px;">
+                                <div style="font-weight:bold; font-size:0.9em; margin-top:5px;">{pl['name']}</div>
+                                <div style="font-size:0.8em; color:#B3B3B3;">{pl['owner']['display_name']}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
             else:
                 st.warning("No playlists found.")
                 
         except Exception as e:
             st.error(f"Search failed: {e}")
 
+    # Check for session state selection
+    if 'selected_search_id' in st.session_state:
+        selected_playlist_id = st.session_state['selected_search_id']
+
+
 # TAB 3: PASTE LINK
 with tab3:
-    st.markdown("##### 🔗 Import from Link")
-    link_input = st.text_input("Paste Spotify Playlist URL", placeholder="https://open.spotify.com/playlist/...")
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### Import via Link")
+    link_input = st.text_input("Paste URL", placeholder="https://open.spotify.com/playlist/...")
     if link_input:
         parsed_id = get_playlist_id_from_link(link_input)
         if parsed_id:
@@ -345,7 +328,9 @@ with tab3:
 # --- DISPLAY RESULTS ---
 if selected_playlist_id:
     try:
-        results = sp.playlist(selected_playlist_id)
+        # Added market='from_token' to fix 404 on region locked lists
+        results = sp.playlist(selected_playlist_id, market='from_token')
+
         tracks = results['tracks']['items']
 
         st.markdown("<br>", unsafe_allow_html=True)
