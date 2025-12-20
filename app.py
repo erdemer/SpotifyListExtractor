@@ -278,12 +278,31 @@ with st.sidebar:
             del st.session_state['api_total']
         st.rerun()
     
-    if st.button("�🚪 Logout / Reset", use_container_width=True):
+    if st.button("🚪 Logout / Reset", use_container_width=True):
         if 'token_info' in st.session_state:
             del st.session_state['token_info']
         if 'selected_search_id' in st.session_state:
             del st.session_state['selected_search_id']
         st.rerun()
+
+    st.markdown("---")
+    with st.expander("🔓 Token Hack (Advanced)"):
+        st.info("Paste a token from Exportify to bypass limitations.")
+        external_token = st.text_input("Access Token", type="password", help="Login to Exportify, copy the token from the URL, paste here.")
+        if st.button("Inject Token", use_container_width=True):
+            if external_token:
+                # Fake a token info object
+                import time
+                st.session_state['token_info'] = {
+                    'access_token': external_token,
+                    'token_type': 'Bearer',
+                    'expires_in': 3600,
+                    'expires_at': int(time.time()) + 3600,
+                    'scope': 'playlist-read-private playlist-read-collaborative user-library-read user-read-private user-follow-read'
+                }
+                st.success("Token injected! Reloading...")
+                time.sleep(1)
+                st.rerun()
 
 
 # --- MAIN INTERFACE ---
