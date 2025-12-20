@@ -22,7 +22,7 @@ st.markdown("""
     }
     
     /* TEXT COLORS & FONTS */
-    h1, h2, h3, h4, h5, h6, p, label, .stMarkdown {
+    h1, h2, h3, h4, h5, h6, p, label, .stMarkdown, .stText, [data-testid="stMarkdownContainer"] {
         color: #FFFFFF !important;
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
@@ -31,53 +31,69 @@ st.markdown("""
     }
 
     /* INPUT FIELDS */
-    .stTextInput > div > div > input {
-        background-color: #282828;
-        color: white;
-        border: 1px solid #282828;
-        border-radius: 20px;
-        padding: 10px 15px;
+    .stTextInput input {
+        background-color: #282828 !important;
+        color: white !important;
+        border: 1px solid #282828 !important;
+        border-radius: 20px !important;
+        padding: 10px 15px !important;
     }
-    .stTextInput > div > div > input:focus {
-        border-color: #1DB954;
-        box-shadow: none;
+    .stTextInput input:focus {
+        border-color: #1DB954 !important;
+        box-shadow: none !important;
+    }
+    .stTextInput label {
+        color: #B3B3B3 !important;
     }
     
     /* SELECT BOX */
     .stSelectbox > div > div {
-        background-color: #282828;
-        color: white;
-        border: none;
-        border-radius: 5px;
+        background-color: #282828 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 5px !important;
     }
-    .stSelectbox div[data-baseweb="select"] > div {
-        background-color: #282828;
-        color: white;
-        border-color: #282828;
-    }
-
-    /* BUTTONS */
+    
+    /* STANDARD BUTTONS */
     .stButton > button {
-        background-color: #1DB954;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-weight: bold;
-        padding: 0.5rem 2rem;
-        transition: all 0.3s ease;
+        background-color: #1DB954 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 50px !important;
+        font-weight: bold !important;
+        padding: 0.5rem 2rem !important;
+        transition: all 0.3s ease !important;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
     .stButton > button:hover {
-        background-color: #1ED760;
+        background-color: #1ED760 !important;
         transform: scale(1.05);
-        color: white;
+        color: white !important;
     }
-    .stButton > button:active {
-        background-color: #1AA34A;
+    
+    /* DOWNLOAD BUTTON SPECIAL STYLE */
+    [data-testid="stDownloadButton"] > button {
+        background-color: #282828 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #B3B3B3 !important;
+        border-radius: 50px !important;
+        width: 100%;
+        transition: all 0.3s ease !important;
+    }
+    [data-testid="stDownloadButton"] > button:hover {
+        border-color: #1DB954 !important;
+        color: #1DB954 !important;
+        background-color: #121212 !important;
     }
 
-    /* PRIMARY LINKS (Like WhatsApp) */
+    /* LINKS (WhatsApp etc) */
+    a {
+        color: #1DB954 !important;
+        text-decoration: none;
+    }
+
+    /* PRIMARY CUSTOM LINKS (Like WhatsApp Button) */
     a[kind="primary"] {
         background-color: #282828 !important;
         border: 1px solid #1DB954 !important;
