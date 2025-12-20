@@ -576,28 +576,19 @@ if selected_playlist_id:
             with col_actions:
                 st.container()
                 with st.container():
-                    st.subheader("🚀 Actions")
+                    st.subheader("� Share EXACT List")
+                    st.info("ℹ️ Spotify links often change songs. Use these tools to share your **exact** tracklist.")
                     
-                    # Link Section
-                    spotify_url = results['external_urls']['spotify']
-                    st.text_input("Direct Spotify Link", value=spotify_url)
+                    # 1. Text Copy (Best for Chat)
+                    st.markdown("**1. Copy to WhatsApp/Discord**")
+                    text_content = "\n".join(share_list_text)
+                    st.text_area("Tracklist (Copy & Paste)", value=text_content, height=150, 
+                               help="Copy this text and paste it to your friend to ensure they see exactly the same songs.")
                     
                     st.markdown("<br>", unsafe_allow_html=True)
-                    
-                    # ZIP / Share
-                    wa_text = f"Check out this playlist: {results['name']}\n{spotify_url}"
-                    encoded_wa_text = urllib.parse.quote(wa_text)
-                    
-                    st.markdown(f"""
-                    <a href="https://wa.me/?text={encoded_wa_text}" target="_blank" kind="primary" style="text-align:center; width:100%;">
-                    📲 Share on WhatsApp
-                    </a>
-                    """, unsafe_allow_html=True)
-                    
-                    st.markdown("<br><br>", unsafe_allow_html=True)
 
-                    # Export Section
-                    st.write("**Archives**")
+                    # 2. CSV Export (Best for Backup)
+                    st.markdown("**2. Download File**")
                     df = pd.DataFrame(track_data_csv)
                     csv = df.to_csv(index=False).encode('utf-8')
                     
@@ -608,6 +599,13 @@ if selected_playlist_id:
                         mime="text/csv",
                         use_container_width=True
                     )
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    # 3. Direct Link (Fallback)
+                    st.markdown("**3. Original Link (May Change Songs)**")
+                    spotify_url = results['external_urls']['spotify']
+                    st.text_input("Spotify URL", value=spotify_url, label_visibility="collapsed")
         except Exception as e:
             st.error(f"Error processing playlist display: {e}")
             
