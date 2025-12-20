@@ -69,13 +69,21 @@ st.markdown("""
 
     /* INPUT FIELDS */
     .stTextInput input {
-        background-color: #282828 !important;
         color: white !important;
+    }
+    div[data-baseweb="input"] {
+        background-color: #282828 !important;
         border: 1px solid #282828 !important;
-        border-radius: 50px !important; /* Pill shape */
-        padding: 12px 20px !important;
+        border-radius: 50px !important;
+        padding: 5px 10px !important;
+    }
+    div[data-baseweb="base-input"] {
+        background-color: transparent !important;
     }
     .stTextInput input:focus {
+        box-shadow: none !important;
+    }
+    div[data-baseweb="input"]:focus-within {
         border-color: #1DB954 !important;
         box-shadow: 0 0 0 1px #1DB954 !important;
     }
