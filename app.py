@@ -1,13 +1,14 @@
 import streamlit as st
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import os
 import pandas as pd
 
 # --- AYARLAR ---
 # Güvenlik notu: Gerçek projede bunları environment variable'dan (.env) çekmelisin.
-CLIENT_ID = 'f2a3c3e646bb4a6994ab78e6ebbca954'
-CLIENT_SECRET = 'd3a67fcddc3041bab7bb6d4804f821f3'
-REDIRECT_URI = 'http://localhost:8501'
+CLIENT_ID = st.secrets["SPOTIPY_CLIENT_ID"]
+CLIENT_SECRET = st.secrets["SPOTIPY_CLIENT_SECRET"]
+REDIRECT_URI = st.secrets["SPOTIPY_REDIRECT_URI"]
 
 # Sayfa Yapılandırması
 st.set_page_config(page_title="Spotify Playlist Paylaş", page_icon="🎵")
