@@ -191,8 +191,8 @@ sp_oauth = SpotifyOAuth(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     redirect_uri=REDIRECT_URI,
-    # Scopes: playlist access, user library, follow status, and user profile
-    scope="playlist-read-private playlist-read-collaborative user-library-read user-read-private user-follow-read"
+    # Scopes: playlist access (read/write), user library, follow status, etc.
+    scope="playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read user-read-private user-follow-read"
 )
 
 if 'token_info' not in st.session_state:
@@ -344,42 +344,10 @@ with tab1:
         spotify_owned = [pl for pl in my_playlists if pl and pl['owner']['id'] == 'spotify']
         user_owned = [pl for pl in my_playlists if pl and pl['owner']['id'] != 'spotify']
         
-        # Debug section
-        with st.expander("🔍 Debug: Playlist Fetch Statistics", expanded=False):
-            st.write(f"**Total playlists fetched:** {len(my_playlists)}")
-            
-            # Show API total vs actual
-            if 'api_total' in st.session_state:
-                api_total = st.session_state['api_total']
-                if api_total != len(my_playlists):
-                    st.warning(f"⚠️ **Mismatch!** API says total={api_total}, but we fetched {len(my_playlists)}")
-                else:
-                    st.success(f"✅ Fetched all {len(my_playlists)} playlists successfully")
-            
-            st.write(f"**Spotify-owned playlists:** {len(spotify_owned)} (includes 'Made For You', Mixes, etc.)")
-            st.write(f"**User/Other playlists:** {len(user_owned)}")
-            
-            # Show fetch log
-            if 'fetch_log' in st.session_state:
-                st.markdown("---")
-                st.markdown("**Fetch Log:**")
-                for log_entry in st.session_state['fetch_log']:
-                    st.code(log_entry, language="")
-            
-            st.markdown("---")
-            st.markdown("**Spotify-Owned Playlists:**")
-            if len(spotify_owned) == 0:
-                st.warning("⚠️ No Spotify-owned playlists found! This might mean:\n- You haven't followed any 'Made For You' playlists\n- There's an authentication/scope issue\n- The API is not returning them")
-            else:
-                for pl in spotify_owned:
-                    st.write(f"- {pl['name']} (ID: `{pl['id'][:20]}...`)")
-            
-            st.markdown("---")
-            st.markdown("**Your Playlists:**")
-            for pl in user_owned[:10]:  # Show first 10
-                st.write(f"- {pl['name']} by {pl['owner']['display_name']} (ID: `{pl['id'][:20]}...`)")
-            if len(user_owned) > 10:
-                st.write(f"... and {len(user_owned) - 10} more")
+        # Debug information (Internal only, not displayed)
+        spotify_owned = [pl for pl in my_playlists if pl and pl['owner']['id'] == 'spotify']
+        user_owned = [pl for pl in my_playlists if pl and pl['owner']['id'] != 'spotify']
+
         
         # Build playlist options
         playlist_options = {}
@@ -533,11 +501,13 @@ if selected_playlist_id:
             # PREPARE DATA
             share_list_text = []
             track_data_csv = []
+            track_uris = [] # For cloning
             
             for item in tracks:
                 if item.get('track'):
                     track = item['track']
                     t_name = track['name']
+                    track_uris.append(track['uri']) # Collect URI
                     t_artist = track['artists'][0]['name']
                     t_album = track['album']['name'] if 'album' in track else ""
                     
@@ -576,7 +546,7 @@ if selected_playlist_id:
             with col_actions:
                 st.container()
                 with st.container():
-                    st.subheader("� Share EXACT List")
+                    st.subheader("Share EXACT List")
                     st.info("ℹ️ Spotify links often change songs. Use these tools to share your **exact** tracklist.")
                     
                     # 1. Text Copy (Best for Chat)
@@ -606,6 +576,34 @@ if selected_playlist_id:
                     st.markdown("**3. Original Link (May Change Songs)**")
                     spotify_url = results['external_urls']['spotify']
                     st.text_input("Spotify URL", value=spotify_url, label_visibility="collapsed")
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+                    # 4. Clone Feature
+                    st.markdown("**4. Clone & Share (Static Link)**")
+                    st.caption("Creates a new playlist in YOUR library with these exact songs.")
+                    
+                    if st.button("✨ Create Copy of Playlist", use_container_width=True):
+                        try:
+                            with st.spinner("Creating playlist..."):
+                                # 1. Create Playlist
+                                user_id = sp.current_user()['id']
+                                new_pl_name = f"Copy of {results['name']}"
+                                desc = f"Static copy of {results['name']} created on {pd.Timestamp.now().strftime('%Y-%m-%d')}"
+                                new_pl = sp.user_playlist_create(user_id, new_pl_name, public=False, description=desc)
+                                
+                                # 2. Add Tracks (Chunked 100)
+                                if track_uris:
+                                    for i in range(0, len(track_uris), 100):
+                                        chunk = track_uris[i:i+100]
+                                        sp.playlist_add_items(new_pl['id'], chunk)
+                                
+                                st.success(f"✅ Created!")
+                                st.text_input("New Shareable Link", value=new_pl['external_urls']['spotify'])
+                        except Exception as e:
+                            st.error(f"Failed: {e}")
+                            if "403" in str(e):
+                                st.warning("⚠️ Permission Denied: Your current token (e.g. Exportify) might be Read-Only. You cannot create playlists with it.")
         except Exception as e:
             st.error(f"Error processing playlist display: {e}")
             
