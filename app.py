@@ -228,11 +228,43 @@ def get_playlist_id_from_link(url):
 @st.cache_data(ttl=300)
 def get_user_playlists():
     all_playlists = []
-    results = sp.current_user_playlists(limit=50)
-    all_playlists.extend(results['items'])
-    while results['next']:
-        results = sp.next(results)
+    
+    # 1. Fetch User's Library
+    try:
+        results = sp.current_user_playlists(limit=50)
         all_playlists.extend(results['items'])
+        while results['next']:
+            results = sp.next(results)
+            all_playlists.extend(results['items'])
+    except Exception as e:
+        print(f"Error fetching library: {e}")
+
+    # 2. Fetch "Made For You" (Discover Weekly, etc.)
+    # These often don't appear in library unless followed, so we force-find them.
+    special_queries = [
+        "Discover Weekly owner:spotify", 
+        "Release Radar owner:spotify", 
+        "On Repeat owner:spotify",
+        "Time Capsule owner:spotify"
+    ]
+    
+    existing_ids = set(p['id'] for p in all_playlists if p)
+    
+    for q in special_queries:
+        try:
+            # Short search for each
+            search_res = sp.search(q=q, type='playlist', limit=1)
+            if search_res['playlists']['items']:
+                found_pl = search_res['playlists']['items'][0]
+                # Only add if not already in library
+                if found_pl['id'] not in existing_ids:
+                    # Mark it distinctively
+                    found_pl['name'] = f"✨ {found_pl['name']}" 
+                    all_playlists.insert(0, found_pl) # Add to top
+                    existing_ids.add(found_pl['id'])
+        except Exception:
+            pass
+            
     return all_playlists
 
 
