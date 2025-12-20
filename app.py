@@ -250,9 +250,10 @@ def get_user_playlists():
 
 
 # --- MAIN INTERFACE ---
-tab1, tab2 = st.tabs(["📂 Library", "🔗 Paste Link"])
+tab1, tab2, tab3 = st.tabs(["📂 Library", "� Search", "�🔗 Paste Link"])
 selected_playlist_id = None
 
+# TAB 1: LIBRARY
 with tab1:
     try:
         my_playlists = get_user_playlists()
@@ -264,7 +265,7 @@ with tab1:
 
         sorted_keys = sorted(playlist_options.keys(), key=str.lower)
         
-        st.markdown("##### 🎧 Select a Playlist")
+        st.markdown("##### 🎧 Select from Library")
         contact_selected = st.selectbox("Search your library...", options=sorted_keys, label_visibility="collapsed")
         
         if contact_selected:
@@ -273,7 +274,64 @@ with tab1:
     except Exception as e:
         st.error(f"Error loading library: {e}")
 
+# TAB 2: SEARCH
 with tab2:
+    st.markdown("##### 🔍 Search Spotify")
+    col_search, col_btn = st.columns([4, 1])
+    with col_search:
+        search_query = st.text_input("Search for playlists (e.g. 'Discover Weekly')", placeholder="Type playlist name...")
+    with col_btn:
+        st.write("") # Spacer
+        st.write("") 
+        search_clicked = st.button("Search")
+
+    # Quick Access Buttons for "Made For You"
+    st.markdown("**Quick Find:**")
+    col_q1, col_q2, col_q3, col_q4 = st.columns(4)
+    with col_q1:
+        if st.button("Discover Weekly"):
+            search_query = "Discover Weekly"
+            search_clicked = True
+    with col_q2:
+        if st.button("Release Radar"):
+            search_query = "Release Radar"
+            search_clicked = True
+    with col_q3:
+        if st.button("On Repeat"):
+            search_query = "On Repeat"
+            search_clicked = True
+    with col_q4:
+        if st.button("Time Capsule"):
+            search_query = "Time Capsule"
+            search_clicked = True
+
+    if search_clicked and search_query:
+        try:
+            # Search limit 20
+            results_search = sp.search(q=search_query, type='playlist', limit=20)
+            playlists_found = results_search['playlists']['items']
+            
+            if playlists_found:
+                st.success(f"Found {len(playlists_found)} playlists for '{search_query}'")
+                
+                # Create a selection list
+                search_options = {}
+                for pl in playlists_found:
+                    if pl:
+                        name = f"{pl['name']} • {pl['owner']['display_name']}"
+                        search_options[name] = pl['id']
+                
+                selected_search = st.selectbox("Select a result:", options=list(search_options.keys()))
+                if selected_search:
+                    selected_playlist_id = search_options[selected_search]
+            else:
+                st.warning("No playlists found.")
+                
+        except Exception as e:
+            st.error(f"Search failed: {e}")
+
+# TAB 3: PASTE LINK
+with tab3:
     st.markdown("##### 🔗 Import from Link")
     link_input = st.text_input("Paste Spotify Playlist URL", placeholder="https://open.spotify.com/playlist/...")
     if link_input:
