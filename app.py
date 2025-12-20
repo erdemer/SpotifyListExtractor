@@ -158,6 +158,20 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
+    /* EXPANDER STYLING */
+    [data-testid="stExpander"] {
+        background-color: #181818 !important;
+        border: 1px solid #282828 !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }
+    [data-testid="stExpander"] summary:hover {
+        color: #1DB954 !important;
+    }
+    [data-testid="stExpander"] summary svg {
+        fill: white !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -270,7 +284,7 @@ with st.sidebar:
     st.markdown("Made by **Erdem Er**")
     
     st.markdown("---")
-    if st.button("� Refresh Playlists", use_container_width=True):
+    if st.button("Refresh Playlists", use_container_width=True):
         # Clear any cached data
         if 'fetch_log' in st.session_state:
             del st.session_state['fetch_log']
