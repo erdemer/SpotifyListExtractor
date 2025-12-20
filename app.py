@@ -141,6 +141,15 @@ st.markdown("""
         color: #1DB954;
     }
 
+    /* SIDEBAR */
+    [data-testid="stSidebar"] {
+        background-color: #000000 !important;
+        border-right: 1px solid #282828;
+    }
+    [data-testid="stSidebar"] * {
+        color: #FFFFFF !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -222,7 +231,7 @@ def get_user_playlists():
 with st.sidebar:
     st.image("https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png", width=150)
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("Made by **Antigravity**")
+    st.markdown("Made by **Erdem Er**")
 
 
 # --- MAIN INTERFACE ---
