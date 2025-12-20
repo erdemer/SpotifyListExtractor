@@ -177,8 +177,8 @@ sp_oauth = SpotifyOAuth(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     redirect_uri=REDIRECT_URI,
-    # Added user-read-private to ensure market='from_token' works correctly
-    scope="playlist-read-private playlist-read-collaborative user-library-read user-read-private"
+    # Scopes: playlist access, user library, follow status, and user profile
+    scope="playlist-read-private playlist-read-collaborative user-library-read user-read-private user-follow-read"
 )
 
 if 'token_info' not in st.session_state:
@@ -227,9 +227,13 @@ def get_playlist_id_from_link(url):
 
 @st.cache_data(ttl=300)
 def get_user_playlists():
+    """Fetch all playlists from the user's library.
+    
+    Note: "Made For You" playlists (Discover Weekly, Release Radar, etc.) 
+    will only appear if the user has followed/liked them in Spotify.
+    """
     all_playlists = []
     
-    # 1. Fetch User's Library
     try:
         results = sp.current_user_playlists(limit=50)
         all_playlists.extend(results['items'])
@@ -237,33 +241,7 @@ def get_user_playlists():
             results = sp.next(results)
             all_playlists.extend(results['items'])
     except Exception as e:
-        print(f"Error fetching library: {e}")
-
-    # 2. Fetch "Made For You" (Discover Weekly, etc.)
-    # These often don't appear in library unless followed, so we force-find them.
-    special_queries = [
-        "Discover Weekly owner:spotify", 
-        "Release Radar owner:spotify", 
-        "On Repeat owner:spotify",
-        "Time Capsule owner:spotify"
-    ]
-    
-    existing_ids = set(p['id'] for p in all_playlists if p)
-    
-    for q in special_queries:
-        try:
-            # Short search for each
-            search_res = sp.search(q=q, type='playlist', limit=1)
-            if search_res['playlists']['items']:
-                found_pl = search_res['playlists']['items'][0]
-                # Only add if not already in library
-                if found_pl['id'] not in existing_ids:
-                    # Mark it distinctively
-                    found_pl['name'] = f"✨ {found_pl['name']}" 
-                    all_playlists.insert(0, found_pl) # Add to top
-                    existing_ids.add(found_pl['id'])
-        except Exception:
-            pass
+        st.error(f"Error fetching library: {e}")
             
     return all_playlists
 
@@ -291,6 +269,17 @@ selected_playlist_id = None
 with tab1:
     try:
         st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Info banner for "Made For You" playlists
+        st.info(
+            "💡 **Can't find 'Discover Weekly' or other personalized playlists?**\n\n"
+            "Due to Spotify API limitations, personalized playlists only appear here if you've followed them. "
+            "To access them:\n"
+            "1. Open the playlist in Spotify\n"
+            "2. Click the ♡ (heart) or 'Follow' button\n"
+            "3. Refresh this page"
+        )
+        
         my_playlists = get_user_playlists()
         playlist_options = {}
         for pl in my_playlists:
