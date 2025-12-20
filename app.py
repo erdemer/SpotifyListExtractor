@@ -48,17 +48,17 @@ def get_playlist_id_from_link(url):
 
 
 def get_user_playlists():
-    playlists = []
-    # İlk sayfayı çek
+    all_playlists = []
+    # İlk 50'yi çek
     results = sp.current_user_playlists(limit=50)
-    playlists.extend(results['items'])
+    all_playlists.extend(results['items'])
 
-    # Eğer devamı varsa (next varsa) döngüyle hepsini al
+    # Devamı var mı diye bak (Next varsa dönmeye devam et)
     while results['next']:
         results = sp.next(results)
-        playlists.extend(results['items'])
+        all_playlists.extend(results['items'])
 
-    return playlists
+    return all_playlists
 
 
 # --- ARAYÜZ (TABS) ---
@@ -72,18 +72,17 @@ with tab1:
     try:
         my_playlists = get_user_playlists()
 
-        # Sözlük oluşturuyoruz: { "Playlist Adı (Sahibi: X)" : ID }
-        # Bu sayede kullanıcı hangisi kendisinin, hangisi başkasının ayırt eder.
         playlist_options = {}
         for pl in my_playlists:
-            if pl:  # Bazen boş gelebilir kontrolü
+            if pl:
                 display_name = f"{pl['name']} (Sahibi: {pl['owner']['display_name']})"
                 playlist_options[display_name] = pl['id']
 
-        selected_name = st.selectbox("Bir playlist seç:", options=playlist_options.keys())
+        # SÖZLÜĞÜ ALFABETİK SIRALA (Bunu ekle)
+        sorted_keys = sorted(playlist_options.keys(), key=str.lower)
 
-        if selected_name:
-            selected_playlist_id = playlist_options[selected_name]
+        # options kısmına sorted_keys veriyoruz
+        selected_name = st.selectbox("Bir playlist seç:", options=sorted_keys)
 
     except Exception as e:
         st.error(f"Listeler yüklenirken hata: {e}")
@@ -148,29 +147,41 @@ if selected_playlist_id:
             for idx, txt in enumerate(share_list_text):
                 st.text(f"{idx + 1}. {txt}")
 
-        # --- SAĞ KOLON: AKSİYONLAR (PAYLAŞ & İNDİR) ---
-        with col_actions:
-            st.subheader("📤 Paylaş & İndir")
+                # --- SAĞ KOLON: AKSİYONLAR (PAYLAŞ & İNDİR) ---
+                # --- SAĞ KOLON: AKSİYONLAR (LINK & PAYLAŞ) ---
+                with col_actions:
+                    st.subheader("🔗 Direkt Link")
 
-            # 1. Metin Kopyalama
-            final_share_text = f"🎵 *{results['name']}* Playlisti:\n\n" + "\n".join(share_list_text)
-            st.text_area("Kopyalanabilir Metin:", value=final_share_text, height=200)
+                    # 1. Spotify Linkini Al
+                    spotify_url = results['external_urls']['spotify']
 
-            # 2. WhatsApp Butonu
-            encoded_text = urllib.parse.quote(final_share_text)
-            st.link_button("📲 WhatsApp ile Gönder", f"https://wa.me/?text={encoded_text}")
+                    # Linki kopyalanabilir alan olarak göster
+                    st.text_input("Spotify Linki:", value=spotify_url)
 
-            # 3. CSV İndirme (Exportify)
-            df = pd.DataFrame(track_data_csv)
-            csv = df.to_csv(index=False).encode('utf-8')
+                    # 2. WhatsApp Butonu (Sadece Linki Paylaşır)
+                    # Arkadaşın buna tıklayınca direkt Spotify uygulaması açılır.
+                    wa_text = f"Şu listeye bir bak: {results['name']}\n{spotify_url}"
+                    encoded_wa_text = urllib.parse.quote(wa_text)
 
-            st.download_button(
-                label="📥 Excel/CSV Olarak İndir",
-                data=csv,
-                file_name=f"{results['name']}.csv",
-                mime="text/csv",
-                type="primary"
-            )
+                    st.link_button(
+                        "📲 WhatsApp ile Linki Gönder",
+                        f"https://wa.me/?text={encoded_wa_text}",
+                        type="primary"  # Butonu vurgulu yapar
+                    )
+
+                    st.divider()
+
+                    # 3. İstersen yine CSV İndirme butonu durabilir
+                    st.subheader("💾 Arşivle")
+                    df = pd.DataFrame(track_data_csv)
+                    csv = df.to_csv(index=False).encode('utf-8')
+
+                    st.download_button(
+                        label="📥 Excel/CSV Olarak İndir",
+                        data=csv,
+                        file_name=f"{results['name']}.csv",
+                        mime="text/csv",
+                    )
 
     except Exception as e:
         st.error(f"Playlist detayları alınamadı. Hata: {e}")
