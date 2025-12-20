@@ -344,107 +344,133 @@ with tab3:
 
 # --- DISPLAY RESULTS ---
 if selected_playlist_id:
+    results = None
+    fetch_error = None
+    
+    # Strategy 1: Market = from_token (Best for region locking)
     try:
-        # Added market='from_token' to fix 404 on region locked lists
         results = sp.playlist(selected_playlist_id, market='from_token')
-
-        tracks = results['tracks']['items']
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # HERO SECTION
-        with st.container():
-            col_img, col_data = st.columns([1.5, 4])
-            with col_img:
-                if results['images']:
-                    st.image(results['images'][0]['url'], use_container_width=True)
-            with col_data:
-                st.markdown(f"<h1 style='margin-bottom:0;'>{results['name']}</h1>", unsafe_allow_html=True)
-                st.markdown(f"<p style='color:#B3B3B3; font-size:1.1em;'>By {results['owner']['display_name']}</p>", unsafe_allow_html=True)
-                st.markdown(f"**{results['tracks']['total']} tracks**")
-                if results['description']:
-                    st.caption(results['description'])
-
-        st.divider()
-
-        # CONTENT AREA
-        col_list, col_actions = st.columns([2, 1.2])
-
-        # PREPARE DATA
-        share_list_text = []
-        track_data_csv = []
-        
-        for item in tracks:
-            if item.get('track'):
-                track = item['track']
-                t_name = track['name']
-                t_artist = track['artists'][0]['name']
-                t_album = track['album']['name'] if 'album' in track else ""
-                
-                share_list_text.append(f"{t_name} - {t_artist}")
-                track_data_csv.append({
-                    "Title": t_name,
-                    "Artist": t_artist,
-                    "Album": t_album,
-                    "Duration (ms)": track['duration_ms']
-                })
-
-        # --- LEFT: TRACK LIST ---
-        with col_list:
-            st.subheader("🎵 Tracks")
-            with st.container(height=500):
-                for idx, item in enumerate(tracks):
-                    if item.get('track'):
-                        tr = item['track']
-                        # Custom HTML Row for better look
-                        st.markdown(
-                            f"""
-                            <div class="track-row">
-                                <div class="track-info">
-                                    <span class="track-name">{idx + 1}. {tr['name']}</span>
-                                    <span class="track-artist">{tr['artists'][0]['name']}</span>
-                                </div>
-                            </div>
-                            """, 
-                            unsafe_allow_html=True
-                        )
-
-        # --- RIGHT: ACTIONS ---
-        with col_actions:
-            st.container()
-            with st.container():
-                st.subheader("🚀 Actions")
-                
-                # Link Section
-                spotify_url = results['external_urls']['spotify']
-                st.text_input("Direct Spotify Link", value=spotify_url)
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                # ZIP / Share
-                wa_text = f"Check out this playlist: {results['name']}\n{spotify_url}"
-                encoded_wa_text = urllib.parse.quote(wa_text)
-                
-                st.markdown(f"""
-                <a href="https://wa.me/?text={encoded_wa_text}" target="_blank" kind="primary" style="text-align:center; width:100%;">
-                   📲 Share on WhatsApp
-                </a>
-                """, unsafe_allow_html=True)
-                
-                st.markdown("<br><br>", unsafe_allow_html=True)
-
-                # Export Section
-                st.write("**Archives**")
-                df = pd.DataFrame(track_data_csv)
-                csv = df.to_csv(index=False).encode('utf-8')
-                
-                st.download_button(
-                    label="⬇️ Download as CSV",
-                    data=csv,
-                    file_name=f"{results['name']}.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-
     except Exception as e:
-        st.error(f"Could not load playlist details. Error: {e}")
+        fetch_error = e
+    
+    # Strategy 2: No Market (Generic)
+    if not results:
+        try:
+            results = sp.playlist(selected_playlist_id)
+        except Exception:
+            pass
+
+    # Strategy 3: Market = US (Fallback)
+    if not results:
+        try:
+            results = sp.playlist(selected_playlist_id, market='US')
+        except Exception:
+            pass
+            
+    if results:
+        try:
+            tracks = results['tracks']['items']
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # HERO SECTION
+            with st.container():
+                col_img, col_data = st.columns([1.5, 4])
+                with col_img:
+                    if results['images']:
+                        st.image(results['images'][0]['url'], use_container_width=True)
+                with col_data:
+                    st.markdown(f"<h1 style='margin-bottom:0;'>{results['name']}</h1>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='color:#B3B3B3; font-size:1.1em;'>By {results['owner']['display_name']}</p>", unsafe_allow_html=True)
+                    st.markdown(f"**{results['tracks']['total']} tracks**")
+                    if results['description']:
+                        st.caption(results['description'])
+
+            st.divider()
+
+            # CONTENT AREA
+            col_list, col_actions = st.columns([2, 1.2])
+
+            # PREPARE DATA
+            share_list_text = []
+            track_data_csv = []
+            
+            for item in tracks:
+                if item.get('track'):
+                    track = item['track']
+                    t_name = track['name']
+                    t_artist = track['artists'][0]['name']
+                    t_album = track['album']['name'] if 'album' in track else ""
+                    
+                    share_list_text.append(f"{t_name} - {t_artist}")
+                    track_data_csv.append({
+                        "Title": t_name,
+                        "Artist": t_artist,
+                        "Album": t_album,
+                        "Duration (ms)": track['duration_ms']
+                    })
+
+            # --- LEFT: TRACK LIST ---
+            with col_list:
+                st.subheader("🎵 Tracks")
+                with st.container(height=500):
+                    for idx, item in enumerate(tracks):
+                        if item.get('track'):
+                            tr = item['track']
+                            # Custom HTML Row for better look
+                            st.markdown(
+                                f"""
+                                <div class="track-row">
+                                    <div class="track-info">
+                                        <span class="track-name">{idx + 1}. {tr['name']}</span>
+                                        <span class="track-artist">{tr['artists'][0]['name']}</span>
+                                    </div>
+                                </div>
+                                """, 
+                                unsafe_allow_html=True
+                            )
+
+            # --- RIGHT: ACTIONS ---
+            with col_actions:
+                st.container()
+                with st.container():
+                    st.subheader("🚀 Actions")
+                    
+                    # Link Section
+                    spotify_url = results['external_urls']['spotify']
+                    st.text_input("Direct Spotify Link", value=spotify_url)
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    # ZIP / Share
+                    wa_text = f"Check out this playlist: {results['name']}\n{spotify_url}"
+                    encoded_wa_text = urllib.parse.quote(wa_text)
+                    
+                    st.markdown(f"""
+                    <a href="https://wa.me/?text={encoded_wa_text}" target="_blank" kind="primary" style="text-align:center; width:100%;">
+                    📲 Share on WhatsApp
+                    </a>
+                    """, unsafe_allow_html=True)
+                    
+                    st.markdown("<br><br>", unsafe_allow_html=True)
+
+                    # Export Section
+                    st.write("**Archives**")
+                    df = pd.DataFrame(track_data_csv)
+                    csv = df.to_csv(index=False).encode('utf-8')
+                    
+                    st.download_button(
+                        label="⬇️ Download as CSV",
+                        data=csv,
+                        file_name=f"{results['name']}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+        except Exception as e:
+            st.error(f"Error processing playlist data: {e}")
+            
+    else:
+        st.error(f"Could not load playlist details. Spotify API returned 404.")
+        if fetch_error:
+             st.caption(f"Debug Info: {fetch_error}")
+
