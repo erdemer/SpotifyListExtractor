@@ -178,7 +178,7 @@ sp_oauth = SpotifyOAuth(
     client_secret=CLIENT_SECRET,
     redirect_uri=REDIRECT_URI,
     # Added user-read-private to ensure market='from_token' works correctly
-    scope="playlist-read-private playlist-read-collaborative user-library-read user-read-private"
+    scope="playlist-read-private playlist-read-collaborative user-library-read"
 )
 
 if 'token_info' not in st.session_state:
@@ -202,7 +202,7 @@ if 'token_info' not in st.session_state:
                 <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" width="100" style="margin-bottom: 20px;">
                 <h1 style="font-size: 3rem; margin-bottom: 10px;">Spotify Manager</h1>
                 <p style="color:#B3B3B3; font-size: 1.2rem; margin-bottom: 40px;">Manage, Export, and Share your playlists with style.</p>
-                <a href="{auth_url}" target="_self" style="background-color: #1DB954; color: white; padding: 15px 40px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1.2rem; transition: 0.3s; box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);">
+                <a href="{auth_url}" target="_blank" style="background-color: #1DB954; color: white; padding: 15px 40px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1.2rem; transition: 0.3s; box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);">
                     Login with Spotify
                 </a>
             </div>
