@@ -178,7 +178,7 @@ sp_oauth = SpotifyOAuth(
     client_secret=CLIENT_SECRET,
     redirect_uri=REDIRECT_URI,
     # Added user-read-private to ensure market='from_token' works correctly
-    scope="playlist-read-private playlist-read-collaborative user-library-read"
+    scope="playlist-read-private playlist-read-collaborative user-library-read user-read-private"
 )
 
 if 'token_info' not in st.session_state:
