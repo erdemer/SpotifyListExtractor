@@ -177,7 +177,8 @@ sp_oauth = SpotifyOAuth(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
     redirect_uri=REDIRECT_URI,
-    scope="playlist-read-private playlist-read-collaborative user-library-read"
+    # Added user-read-private to ensure market='from_token' works correctly
+    scope="playlist-read-private playlist-read-collaborative user-library-read user-read-private"
 )
 
 if 'token_info' not in st.session_state:
@@ -240,6 +241,14 @@ with st.sidebar:
     st.image("https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png", width=150)
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("Made by **Erdem Er**")
+    
+    st.markdown("---")
+    if st.button("🚪 Logout / Reset", use_container_width=True):
+        if 'token_info' in st.session_state:
+            del st.session_state['token_info']
+        if 'selected_search_id' in st.session_state:
+            del st.session_state['selected_search_id']
+        st.rerun()
 
 
 # --- MAIN INTERFACE ---
@@ -345,27 +354,35 @@ with tab3:
 # --- DISPLAY RESULTS ---
 if selected_playlist_id:
     results = None
-    fetch_error = None
+    fetch_errors = []
     
-    # Strategy 1: Market = from_token (Best for region locking)
-    try:
-        results = sp.playlist(selected_playlist_id, market='from_token')
-    except Exception as e:
-        fetch_error = e
-    
+    # Strategy 1: Market = from_token (Requires scope user-read-private)
+    if not results:
+        try:
+            results = sp.playlist(selected_playlist_id, market='from_token')
+        except Exception as e:
+            fetch_errors.append(f"Strategy 1 (from_token): {e}")
+
     # Strategy 2: No Market (Generic)
     if not results:
         try:
             results = sp.playlist(selected_playlist_id)
-        except Exception:
-            pass
+        except Exception as e:
+            fetch_errors.append(f"Strategy 2 (No Market): {e}")
 
     # Strategy 3: Market = US (Fallback)
     if not results:
         try:
             results = sp.playlist(selected_playlist_id, market='US')
-        except Exception:
-            pass
+        except Exception as e:
+            fetch_errors.append(f"Strategy 3 (US): {e}")
+            
+    # Strategy 4: Raw (No additional types)
+    if not results:
+        try:
+            results = sp.playlist(selected_playlist_id, additional_types=None)
+        except Exception as e:
+            fetch_errors.append(f"Strategy 4 (No additional_types): {e}")
             
     if results:
         try:
@@ -429,6 +446,9 @@ if selected_playlist_id:
                                 """, 
                                 unsafe_allow_html=True
                             )
+                        else:
+                            # Handle empty/local tracks
+                            st.caption(f"{idx + 1}. Unknown Track (Local? or Unplayable)")
 
             # --- RIGHT: ACTIONS ---
             with col_actions:
@@ -467,10 +487,12 @@ if selected_playlist_id:
                         use_container_width=True
                     )
         except Exception as e:
-            st.error(f"Error processing playlist data: {e}")
+            st.error(f"Error processing playlist display: {e}")
             
     else:
-        st.error(f"Could not load playlist details. Spotify API returned 404.")
-        if fetch_error:
-             st.caption(f"Debug Info: {fetch_error}")
-
+        st.error(f"Could not load playlist.")
+        with st.expander("Debug Details (Show this to Developer)"):
+            for err in fetch_errors:
+                st.write(err)
+            
+            st.warning("⚠️ Try clicking 'Logout / Reset' in the sidebar to refresh permissions!")
