@@ -562,8 +562,28 @@ if selected_playlist_id:
                     # 1. Text Copy (Best for Chat)
                     st.markdown("**1. Copy to WhatsApp/Discord**")
                     text_content = "\n".join(share_list_text)
-                    st.text_area("Tracklist (Copy & Paste)", value=text_content, height=150, 
-                               help="Copy this text and paste it to your friend to ensure they see exactly the same songs.")
+                    
+                    # WhatsApp Button
+                    encoded_text = urllib.parse.quote(text_content)
+                    whatsapp_url = f"https://wa.me/?text={encoded_text}"
+                    st.markdown(f"""
+                    <a href="{whatsapp_url}" target="_blank" style="
+                        display: inline-block;
+                        background-color: #25D366;
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        text-decoration: none;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                    ">
+                        📱 Share on WhatsApp
+                    </a>
+                    """, unsafe_allow_html=True)
+
+                    # Code Block for Copy
+                    st.code(text_content, language="text")
+                    st.caption("Click the copy button 📄 in the top right of the box above.")
                     
                     st.markdown("<br>", unsafe_allow_html=True)
 
