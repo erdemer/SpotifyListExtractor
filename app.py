@@ -315,20 +315,18 @@ with st.sidebar:
         st.info("Paste a 'Read-Only' token (e.g. from Exportify) here. We will use it to **FETCH** playlists, but use your main login to **CREATE** them.")
         external_token_input = st.text_input("External Access Token", type="password", help="Paste Exportify token here.")
         
-        col_inj, col_clr = st.columns(2)
-        with col_inj:
-            if st.button("Inject Read Token", use_container_width=True, type="primary"):
-                if external_token_input:
-                    st.session_state['external_token'] = external_token_input
-                    st.success("Read token injected! Reloading...")
-                    import time
-                    time.sleep(1)
-                    st.rerun()
-        with col_clr:
-            if st.button("Clear External Token", use_container_width=True):
-                if 'external_token' in st.session_state:
-                    del st.session_state['external_token']
-                    st.rerun()
+        if st.button("Inject Read Token", use_container_width=True, type="primary"):
+            if external_token_input:
+                st.session_state['external_token'] = external_token_input
+                st.success("Read token injected! Reloading...")
+                import time
+                time.sleep(1)
+                st.rerun()
+        
+        if st.button("Clear External Token", use_container_width=True):
+            if 'external_token' in st.session_state:
+                del st.session_state['external_token']
+                st.rerun()
 
 
 # --- MAIN INTERFACE ---
