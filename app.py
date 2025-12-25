@@ -228,6 +228,15 @@ if 'token_info' not in st.session_state:
 token = st.session_state['token_info']['access_token']
 sp = spotipy.Spotify(auth=token)
 
+# --- DUAL TOKEN SUTUP ---
+# User requested: Use main token for WRITING (sp), but allow an external token (Exportify) for READING (sp_read).
+external_token = st.session_state.get('external_token')
+if external_token:
+    sp_read = spotipy.Spotify(auth=external_token)
+    st.toast("Using External Token for Fetching Data", icon="🔓")
+else:
+    sp_read = sp
+
 
 # --- FUNCTIONS ---
 def get_playlist_id_from_link(url):
@@ -250,7 +259,7 @@ def get_user_playlists():
     
     try:
         # First request
-        results = sp.current_user_playlists(limit=50)
+        results = sp_read.current_user_playlists(limit=50)
         total_from_api = results.get('total', 0)
         all_playlists.extend(results['items'])
         fetch_log.append(f"First fetch: Got {len(results['items'])} items, API says total={total_from_api}")
@@ -258,7 +267,7 @@ def get_user_playlists():
         # Pagination
         page_num = 1
         while results['next']:
-            results = sp.next(results)
+            results = sp_read.next(results)
             page_num += 1
             all_playlists.extend(results['items'])
             fetch_log.append(f"Page {page_num}: Got {len(results['items'])} more items")
@@ -297,26 +306,29 @@ with st.sidebar:
             del st.session_state['token_info']
         if 'selected_search_id' in st.session_state:
             del st.session_state['selected_search_id']
+        if 'external_token' in st.session_state:
+            del st.session_state['external_token']
         st.rerun()
 
     st.markdown("---")
-    with st.expander("🔓 Token Hack (Advanced)"):
-        st.info("Paste a token from Exportify to bypass limitations.")
-        external_token = st.text_input("Access Token", type="password", help="Login to Exportify, copy the token from the URL, paste here.")
-        if st.button("Inject Token", use_container_width=True, type="primary"):
-            if external_token:
-                # Fake a token info object
-                import time
-                st.session_state['token_info'] = {
-                    'access_token': external_token,
-                    'token_type': 'Bearer',
-                    'expires_in': 3600,
-                    'expires_at': int(time.time()) + 3600,
-                    'scope': 'playlist-read-private playlist-read-collaborative user-library-read user-read-private user-follow-read'
-                }
-                st.success("Token injected! Reloading...")
-                time.sleep(1)
-                st.rerun()
+    with st.expander("🔓 Token Hack (Reader Mode)"):
+        st.info("Paste a 'Read-Only' token (e.g. from Exportify) here. We will use it to **FETCH** playlists, but use your main login to **CREATE** them.")
+        external_token_input = st.text_input("External Access Token", type="password", help="Paste Exportify token here.")
+        
+        col_inj, col_clr = st.columns(2)
+        with col_inj:
+            if st.button("Inject Read Token", use_container_width=True, type="primary"):
+                if external_token_input:
+                    st.session_state['external_token'] = external_token_input
+                    st.success("Read token injected! Reloading...")
+                    import time
+                    time.sleep(1)
+                    st.rerun()
+        with col_clr:
+            if st.button("Clear External Token", use_container_width=True):
+                if 'external_token' in st.session_state:
+                    del st.session_state['external_token']
+                    st.rerun()
 
 
 # --- MAIN INTERFACE ---
@@ -392,7 +404,7 @@ with tab2:
 
     if final_query:
         try:
-            results_search = sp.search(q=final_query, type='playlist', limit=8)
+            results_search = sp_read.search(q=final_query, type='playlist', limit=8)
             playlists_found = results_search['playlists']['items']
             
             if playlists_found:
@@ -449,28 +461,28 @@ if selected_playlist_id:
     # Strategy 1: Market = from_token (Requires scope user-read-private)
     if not results:
         try:
-            results = sp.playlist(selected_playlist_id, market='from_token')
+            results = sp_read.playlist(selected_playlist_id, market='from_token')
         except Exception as e:
             fetch_errors.append(f"Strategy 1 (from_token): {e}")
 
     # Strategy 2: No Market (Generic)
     if not results:
         try:
-            results = sp.playlist(selected_playlist_id)
+            results = sp_read.playlist(selected_playlist_id)
         except Exception as e:
             fetch_errors.append(f"Strategy 2 (No Market): {e}")
 
     # Strategy 3: Market = US (Fallback)
     if not results:
         try:
-            results = sp.playlist(selected_playlist_id, market='US')
+            results = sp_read.playlist(selected_playlist_id, market='US')
         except Exception as e:
             fetch_errors.append(f"Strategy 3 (US): {e}")
             
     # Strategy 4: Raw (No additional types)
     if not results:
         try:
-            results = sp.playlist(selected_playlist_id, additional_types=None)
+            results = sp_read.playlist(selected_playlist_id, additional_types=None)
         except Exception as e:
             fetch_errors.append(f"Strategy 4 (No additional_types): {e}")
             
